@@ -4,35 +4,18 @@ import copy
 
 def generer_grille_complete():
     grille = [[0 for _ in range(9)] for _ in range(9)]
+    nombres = list(range(1, 10))
+    random.shuffle(nombres)
     
-    def est_valide_generation(grille, num, pos):
-        for i in range(9):
-            if grille[pos[0]][i] == num or grille[i][pos[1]] == num:
-                return False
-        box_x, box_y = pos[1] // 3, pos[0] // 3
-        for i in range(box_y * 3, box_y * 3 + 3):
-            for j in range(box_x * 3, box_x * 3 + 3):
-                if grille[i][j] == num:
-                    return False
-        return True
+    # Remplir la première ligne avec des nombres aléatoires
+    grille[0] = nombres
     
-    def remplir_grille(grille):
-        for i in range(9):
-            for j in range(9):
-                if grille[i][j] == 0:
-                    nombres = list(range(1, 10))
-                    random.shuffle(nombres)
-                    for num in nombres:
-                        if est_valide_generation(grille, num, (i, j)):
-                            grille[i][j] = num
-                            if remplir_grille(grille):
-                                return True
-                            grille[i][j] = 0
-                    return False
-        return True
-    
-    remplir_grille(grille)
-    return grille
+    # Résoudre le reste de la grille
+    if resoudre(grille):
+        return grille
+    else:
+        # Si la résolution échoue, recommencer
+        return generer_grille_complete()
 
 def generer_grille_jeu(grille_complete, difficulte):
     grille = copy.deepcopy(grille_complete)
@@ -44,11 +27,12 @@ def generer_grille_jeu(grille_complete, difficulte):
     
     cases_vides = cases_a_vider.get(difficulte, 40)
     
-    positions = [(i, j) for i in range(9) for j in range(9)]
-    random.shuffle(positions)
-    
-    for i in range(cases_vides):
-        row, col = positions[i]
+    for _ in range(cases_vides):
+        row = random.randint(0, 8)
+        col = random.randint(0, 8)
+        while grille[row][col] == 0:
+            row = random.randint(0, 8)
+            col = random.randint(0, 8)
         grille[row][col] = 0
     
     return grille
@@ -90,6 +74,24 @@ def trouver_vide(grille):
             if grille[i][j] == 0:
                 return (i, j)
     return None
+
+def resoudre(grille):
+    find = trouver_vide(grille)
+    if not find:
+        return True
+    else:
+        row, col = find
+
+    for i in range(1,10):
+        if est_valide(grille, i, (row, col)):
+            grille[row][col] = i
+
+            if resoudre(grille):
+                return True
+
+            grille[row][col] = 0
+
+    return False
 
 def jouer_sudoku(difficulte):
     grille_complete = generer_grille_complete()
